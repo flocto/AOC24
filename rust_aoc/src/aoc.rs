@@ -1,9 +1,12 @@
 pub fn day1(input: &str) {
-    let nums = input.split_whitespace().map(|x| x.parse::<i32>().unwrap()).collect::<Vec<i32>>();
+    let nums = input
+        .split_whitespace()
+        .map(|x| x.parse::<i32>().unwrap())
+        .collect::<Vec<i32>>();
     let mut a: Vec<i32> = Vec::new();
     let mut b: Vec<i32> = Vec::new();
     let mut vecs = vec![&mut a, &mut b];
-    
+
     nums.iter().enumerate().for_each(|(i, x)| {
         vecs[i % 2].push(*x);
     });
@@ -11,13 +14,114 @@ pub fn day1(input: &str) {
     a.sort();
     b.sort();
 
-    println!("Part 1: {}", a.iter().zip(b.iter()).map(|(x, y)| (x - y).abs()).sum::<i32>());
+    println!(
+        "Part 1: {}",
+        a.iter()
+            .zip(b.iter())
+            .map(|(x, y)| (x - y).abs())
+            .sum::<i32>()
+    );
 
-    println!("Part 2: {}", a.iter().map(|x| x * b.iter().filter(|&y| x == y).count() as i32).sum::<i32>());
+    println!(
+        "Part 2: {}",
+        a.iter()
+            .map(|x| x * b.iter().filter(|&y| x == y).count() as i32)
+            .sum::<i32>()
+    );
 }
 
 pub fn day2(input: &str) {
-    todo!()
+    let records = input
+        .split("\n")
+        .map(|line| {
+            line.split_whitespace()
+                .map(|x| x.parse::<i32>().unwrap())
+                .collect::<Vec<i32>>()
+        })
+        .collect::<Vec<Vec<i32>>>();
+
+    let mut valid = 0;
+    for record in &records {
+        let diff = record
+            .iter()
+            .zip(record.iter().skip(1))
+            .map(|(&x, &y)| x - y)
+            .collect::<Vec<i32>>();
+
+        if diff.iter().all(|&x| x > 0) || diff.iter().all(|&x| x < 0) {
+            if diff.iter().all(|&x| 1 <= x.abs() && x.abs() <= 3) {
+                valid += 1;
+            }
+        }
+    }
+
+    println!("Part 1: {}", valid);
+
+    valid = 0;
+    
+    for record in &records { 
+        let mut fail = 0;
+        let diff = record
+            .iter()
+            .zip(record.iter().skip(1))
+            .map(|(&x, &y)| x - y)
+            .collect::<Vec<i32>>();
+
+        let s = diff.iter().map(|&x| x.signum()).sum::<i32>().signum();
+        // hardcoded xdd
+        if diff[0].signum() != s {
+            if diff.iter().skip(1).all(|&x| x.signum() == s && 1 <= x.abs() && x.abs() <= 3) {
+                valid += 1;
+                continue;
+            }
+        }
+        if diff[diff.len() - 1].signum() != s {
+            if diff.iter().take(diff.len() - 1).all(|&x| x.signum() == s && 1 <= x.abs() && x.abs() <= 3) {
+                valid += 1;
+                continue;
+            }
+        }
+
+        let mut i: usize = 0;
+        while i < diff.len() {
+            if diff[i].signum() != s || !(1 <= diff[i].abs() && diff[i].abs() <= 3) {
+                fail += 1;
+                if fail > 1 {
+                    break;
+                }
+
+                // remove the current element
+                let mut failed_cur = false;
+                let mut failed_prev = false;
+                if i > 0 {
+                    let new_diff = diff[i] + diff[i - 1];
+                    if new_diff.signum() != s || !(1 <= new_diff.abs() && new_diff.abs() <= 3) {
+                        failed_cur = true;
+                    }
+                }
+                if i < diff.len() - 1 {
+                    let new_diff = diff[i] + diff[i + 1];
+                    if new_diff.signum() != s || !(1 <= new_diff.abs() && new_diff.abs() <= 3) {
+                        failed_prev = true;
+                    }
+                    else {
+                        i += 1;
+                    }
+                }
+                if failed_cur && failed_prev {
+                    fail += 1;
+                    break;
+                }
+            } 
+            i += 1;
+        }
+        
+        if fail < 2 {
+            valid += 1;
+        }
+    }
+
+    println!("Part 2: {}", valid);
 }
 
 pub fn day3(input: &str) {
