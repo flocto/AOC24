@@ -125,7 +125,50 @@ pub fn day2(input: &str) {
 }
 
 pub fn day3(input: &str) {
-    todo!()
+    let (mut p1, mut p2): (u64, u64) = (0, 0);
+    let mut i: usize = 0;
+    let mut active = true;
+
+    while i < input.len() {
+        if input[i..].starts_with("do()") {
+            active = true;
+        }
+        else if input[i..].starts_with("don\'t()") {
+            active = false;
+        }
+        // mul(\d+,\d+)
+        else if input[i..].starts_with("mul(") {
+            i += 4;
+            let input_bytes = input[i..].as_bytes();
+            let mut j = 0;
+            let mut a = 0;
+            let mut b = 0;
+            while '0' <= input_bytes[j] as char && input_bytes[j] as char <= '9' {
+                a = a * 10 + (input_bytes[j] - '0' as u8) as u64;
+                j += 1;
+            }
+            if input_bytes[j] != ',' as u8 {
+                i += j;
+                continue;
+            }
+            j += 1;
+            while '0' <= input_bytes[j] as char && input_bytes[j] as char <= '9' {
+                b = b * 10 + (input_bytes[j] - '0' as u8) as u64;
+                j += 1;
+            }
+            if input_bytes[j] != ')' as u8 {
+                i += j;
+                continue;
+            }
+            p1 += a * b;
+            p2 += a * b * active as u64;
+            i += j;
+        }
+        i += 1
+    }
+
+    println!("Part 1: {}", p1);
+    println!("Part 2: {}", p2);
 }
 
 pub fn day4(input: &str) {
