@@ -172,7 +172,45 @@ pub fn day3(input: &str) {
 }
 
 pub fn day4(input: &str) {
-    todo!()
+    let grid = input
+        .split("\n")
+        .map(|line| line.chars().collect::<Vec<char>>())
+        .collect::<Vec<Vec<char>>>();
+
+    let dxy = vec![(0, 1), (1, 0), (1, 1), (1, -1)];
+    let (n, m) = (grid.len(), grid[0].len());
+    let mut c = 0;
+    for x in 0..n {
+        for y in 0..m {
+            for (dx, dy) in &dxy {
+                let i = x as i32;
+                let j = y as i32;
+                if i + 3 * dx < 0 || i + 3 * dx >= n as i32 || j + 3 * dy < 0 || j + 3 * dy >= m as i32 { // oob
+                    continue;
+                }
+
+                let s = (0..4).map(|k| grid[(i + k * dx) as usize][(j + k * dy) as usize]).collect::<String>();
+                c += (s == "XMAS" || s == "SAMX") as i32;
+            }
+        }
+    }
+
+    println!("Part 1: {}", c);
+
+    c = 0;
+    for x in 1..n-1 {
+        for y in 1..m-1 {
+            if grid[x][y] != 'A' {
+                continue;
+            }
+
+            // abuse that fact that only [XMAS] in grid
+            let down = (grid[x-1][y-1] as u8) ^ (grid[x+1][y+1] as u8);
+            let up = (grid[x-1][y+1] as u8) ^ (grid[x+1][y-1] as u8);
+            c += (down == 0b00011110 && up == 0b00011110) as i32;
+        }
+    }
+    println!("Part 2: {}", c);
 }
 
 pub fn day5(input: &str) {
