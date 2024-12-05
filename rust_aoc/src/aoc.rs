@@ -1,3 +1,5 @@
+use std::{collections::HashSet, ops::Index};
+
 pub fn day1(input: &str) {
     let nums = input
         .split_whitespace()
@@ -214,7 +216,55 @@ pub fn day4(input: &str) {
 }
 
 pub fn day5(input: &str) {
-    todo!()
+    let parts: Vec<&str> = input.split("\n\n").collect();
+    
+    let rules = parts[0].split("\n").map(|line| {
+        let mut parts = line.split("|");
+        let left = parts.next().unwrap().parse::<usize>().unwrap();
+        let right = parts.next().unwrap().parse::<usize>().unwrap();
+        (left, right)
+    }).collect::<HashSet<(usize, usize)>>();
+    let updates = parts[1].split("\n").map(|line| {
+        line.split(",").map(|x| x.parse::<usize>().unwrap()).collect::<Vec<usize>>()
+    }).collect::<Vec<Vec<usize>>>();
+    let (mut p1, mut p2) = (0, 0);
+
+    for mut update in updates {
+        let update_pairs = update.iter().map(|&x| update.iter().map(|&y| (x, y)).collect::<HashSet<(usize, usize)>>()).flatten().collect::<HashSet<(usize, usize)>>();
+        let used_rules: HashSet<(usize, usize)> = update_pairs.intersection(&rules).cloned().collect();
+
+        let mut seen = Vec::new();
+        let mut bad = false;
+        update.iter().for_each(|&page| {
+            seen.iter().for_each(|&s| {
+                if used_rules.contains(&(page, s)) {
+                    bad = true;
+                }
+            });
+            seen.push(page);
+        });
+
+        if !bad {
+            p1 += update[update.len() / 2];
+            continue;
+        }
+
+        while bad {
+            bad = false;
+            used_rules.iter().for_each(|&(x, y)| {
+                let (i, j) = (update.iter().position(|&z| z == x).unwrap(), update.iter().position(|&z| z == y).unwrap());
+                if i >= j {
+                    update.swap(i, j);
+                    bad = true;
+                }
+            });
+        }
+
+        p2 += update[update.len() / 2];
+    }
+
+    println!("Part 1: {}", p1);
+    println!("Part 2: {}", p2);
 }
 
 pub fn day6(input: &str) {
