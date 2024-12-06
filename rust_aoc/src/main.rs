@@ -12,7 +12,7 @@ fn main() {
 
     // call the function for the day
     // ignore this jank please i dont want to bother learning reflection
-    let funcs = vec![
+    let func: fn(&str) = vec![
         aoc::day1,
         aoc::day2,
         aoc::day3,
@@ -38,7 +38,7 @@ fn main() {
         aoc::day23,
         aoc::day24,
         aoc::day25,
-    ];
+    ][date - 1];
 
-    funcs[date - 1](&input);
+    func(&input);
 }
