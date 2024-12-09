@@ -356,7 +356,68 @@ pub fn day6(input: &str) {
 }
 
 pub fn day7(input: &str) {
-    todo!()
+    let evals = input
+        .split("\n")
+        .map(
+            |line| -> (usize, Vec<usize>) {
+                let parts = line.split(": ").collect::<Vec<&str>>();
+                let res = parts[0].parse::<usize>().unwrap();
+                let nums = parts.iter().skip(1).next().unwrap().split(" ").map(|x| x.parse::<usize>().unwrap()).collect::<Vec<usize>>();
+                (res, nums)
+            }
+        );
+    
+    let mut found_p1 = HashSet::new();
+    let p1 = evals.clone().map(|(res, nums)| {
+        let mut possible = HashSet::new();
+        possible.insert(nums[0]);
+
+        nums.iter().skip(1).for_each(|&x| {
+            let mut new = HashSet::new();
+            possible.iter().for_each(|&p| {
+                new.insert(p + x);
+                new.insert(p * x);
+            });
+            possible = new.iter().filter(|&x| *x <= res).cloned().collect();
+        });
+
+        if !possible.contains(&res) {
+            return 0;
+        }
+        
+        found_p1.insert(res);
+        res
+    }).sum::<usize>();
+
+    println!("Part 1: {}", p1);
+
+    let p2 = evals.clone().map(|(res, nums)| {
+        if found_p1.contains(&res) {
+            return res;
+        }
+
+        let mut possible = HashSet::new();
+        possible.insert(nums[0]);
+
+        nums.iter().skip(1).for_each(|&x| {
+            let mut new = HashSet::new();
+            possible.iter().for_each(|&p| {
+                new.insert(p + x);
+                new.insert(p * x);
+                // concat
+                new.insert(format!("{}{}", p, x).parse::<usize>().unwrap());
+            });
+            possible = new.iter().filter(|&x| *x <= res).cloned().collect();
+        });
+
+        if !possible.contains(&res) {
+            return 0;
+        }
+        
+        res
+    }).sum::<usize>();
+
+    println!("Part 2: {}", p2);
 }
 
 pub fn day8(input: &str) {
