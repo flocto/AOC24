@@ -1,4 +1,4 @@
-dat = open('input/day1.txt').read().splitlines()
+dat = open('../input/day1.txt').read().splitlines()
 
 # part 1
 a, b = [], []
