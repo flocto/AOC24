@@ -1,11 +1,13 @@
 use chrono::Datelike;
+use std::{self, env::args};
 
 mod aoc;
 fn main() {
-    // get EST datetime
-    let est = chrono::offset::FixedOffset::east_opt(-5 * 3600).unwrap();
-    let now = chrono::Utc::now().with_timezone(&est);
-    let date = now.day() as usize;
+    // // get EST datetime
+    // let est = chrono::offset::FixedOffset::east_opt(-5 * 3600).unwrap();
+    // let now = chrono::Utc::now().with_timezone(&est);
+    // let date = now.day() as usize;
+    let date = args().nth(1).unwrap().parse::<usize>().unwrap();
 
     // read input from ../input/day{date}.txt
     let input = std::fs::read_to_string(format!("../input/day{}.txt", date)).unwrap();

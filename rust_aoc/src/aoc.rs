@@ -1,4 +1,4 @@
-use std::{collections::HashSet, hash::Hash};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 pub fn day1(input: &str) {
     let nums = input
@@ -421,19 +421,159 @@ pub fn day7(input: &str) {
 }
 
 pub fn day8(input: &str) {
-    todo!()
+    let grid = input
+        .split("\n")
+        .map(|line| line.as_bytes().to_vec())
+        .collect::<Vec<Vec<u8>>>();
+
+    // map of c -> [(x1, y1), (x2, y2), ...]
+    let signals = grid.iter().enumerate().fold(HashMap::new(), |mut acc, (i, line)| {
+        line.iter().enumerate().for_each(|(j, &c)| {
+            if c != b'.' {
+                acc.entry(c).or_insert(Vec::new()).push((i, j));
+            }
+        });
+        acc
+    });
+
+    let antinodes = signals.iter().fold(HashSet::new(), |mut acc, (_, v)| {
+        v.iter().for_each(|&(x1, y1)| {
+            v.iter().for_each(|&(x2, y2)| {
+                if x1 == x2 && y1 == y2 {
+                    return;
+                }
+
+                let [dx, dy] = [x2 as i32 - x1 as i32, y2 as i32 - y1 as i32];
+                let [nx, ny] = [x2 as i32 + dx, y2 as i32 + dy];
+                if nx >= 0 && nx < grid.len() as i32 && ny >= 0 && ny < grid[0].len() as i32 {
+                    acc.insert((nx, ny));
+                }
+            });
+        });
+        acc
+    });
+
+    println!("Part 1: {}", antinodes.len());
+
+    let full_antinodes = signals.iter().filter(|(_, v)| v.len() > 1).fold(HashSet::new(), |mut acc, (_, v)| {
+        v.iter().for_each(|&(x1, y1)| {
+            v.iter().for_each(|&(x2, y2)| {
+                if x1 == x2 && y1 == y2 {
+                    return;
+                }
+
+                let [dx, dy] = [x2 as i32 - x1 as i32, y2 as i32 - y1 as i32];
+                let [mut nx, mut ny] = [x2 as i32, y2 as i32];
+                while nx >= 0 && nx < grid.len() as i32 && ny >= 0 && ny < grid[0].len() as i32 {
+                    acc.insert((nx, ny));
+                    nx += dx;
+                    ny += dy;
+                }
+            });
+        });
+        acc
+    });
+
+    println!("Part 2: {}", full_antinodes.len());
 }
 
 pub fn day9(input: &str) {
+    // okay i actually dont want to reimplement this one its really really annoying just see my 2pointers solution in day9.py
     todo!()
 }
 
 pub fn day10(input: &str) {
-    todo!()
+    let grid = input
+        .split("\n")
+        .map(|line| line.as_bytes().to_vec())
+        .collect::<Vec<Vec<u8>>>();
+
+    let (n, m) = (grid.len() as i32, grid[0].len() as i32);
+    let dxy = vec![(-1, 0), (0, 1), (1, 0), (0, -1)];
+    let explore = |grid: &Vec<Vec<u8>>, (x, y)| {
+        let mut c = (0, 0);
+        let mut visited = HashMap::new();
+        let mut q = VecDeque::new();
+        q.push_back((x, y));
+        visited.insert((x, y), 1);
+
+        while !q.is_empty() {
+            let (x, y) = q.pop_front().unwrap();
+            if grid[x as usize][y as usize] == b'9' {
+                c.0 += 1;
+                c.1 += visited[&(x, y)];
+            }
+
+            for (dx, dy) in &dxy {
+                let (nx, ny) = (x + dx, y + dy);
+                if nx < 0 || nx >= n || ny < 0 || ny >= m {
+                    continue;
+                }
+
+                if grid[nx as usize][ny as usize] == grid[x as usize][y as usize] + 1 {
+                    if !visited.contains_key(&(nx, ny)) {
+                        q.push_back((nx, ny));
+
+                    }
+                    visited.insert((nx, ny), visited.get(&(nx, ny)).unwrap_or(&0) + visited[&(x, y)]);
+                }
+            }
+        }
+        c
+    };
+
+    let (p1, p2) = (0..n).flat_map(|x| (0..m).map(move |y| (x, y))).fold((0, 0), |(p1, p2), (x, y)| {
+        if grid[x as usize][y as usize] != b'0' {
+            return (p1, p2);
+        }
+
+        let (c1, c2) = explore(&grid, (x, y));
+        (p1 + c1, p2 + c2)
+    });
+
+    println!("Part 1: {}", p1);
+    println!("Part 2: {}", p2);
 }
 
 pub fn day11(input: &str) {
-    todo!()
+    let nums = input
+        .split_whitespace()
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect::<Vec<usize>>();
+
+    let apply_rule = |counter: HashMap<usize, usize>| {
+        let mut new_counter = HashMap::new();
+        for (&n, &c) in counter.iter() {
+            if n == 0 {
+                new_counter.insert(1, new_counter.get(&1usize).unwrap_or(&0) + c);
+            }
+            else if n.ilog10() % 2 == 1 {
+                let half = (n.ilog10() + 1) / 2;
+                let [a, b] = [n / 10usize.pow(half), n % 10usize.pow(half)];
+                new_counter.insert(a, new_counter.get(&a).unwrap_or(&0) + c);
+                new_counter.insert(b, new_counter.get(&b).unwrap_or(&0) + c);
+            }
+            else {
+                new_counter.insert(n * 2024, new_counter.get(&(n * 2024)).unwrap_or(&0) + c);
+            }
+        }
+        new_counter
+    };
+
+    let mut counter = nums.iter().fold(HashMap::new(), |mut acc, &x| {
+        acc.insert(x, acc.get(&x).unwrap_or(&0) + 1);
+        acc
+    });
+
+    for _ in 0..25 {
+        counter = apply_rule(counter);
+    }
+    println!("Part 1: {}", counter.values().sum::<usize>());
+
+    for _ in 0..50 {
+        counter = apply_rule(counter);
+    }
+    println!("Part 2: {}", counter.values().sum::<usize>());
 }
 
 pub fn day12(input: &str) {
